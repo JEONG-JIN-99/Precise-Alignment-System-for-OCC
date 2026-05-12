@@ -9,9 +9,9 @@ from uwb.sensor import UWB
 
 # 짐벌 파이의 IP 주소
 # cier
-# GIMBAL_IP = "192.168.0.32" 
+GIMBAL_IP = "192.168.0.32" 
 # hotspot
-GIMBAL_IP = "10.185.103.85" 
+# GIMBAL_IP = "10.185.103.85" 
 PORT = 5005
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

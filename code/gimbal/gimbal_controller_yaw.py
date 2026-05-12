@@ -1,5 +1,6 @@
 import math
 import RPi.GPIO as GPIO
+import time
 
 # packet set
 # header | distance | azimuth | elevation | latitude | langitude
@@ -12,7 +13,8 @@ class GimbalController:
         
         self.yaw_pwm = GPIO.PWM(yaw_pin, 50)
         
-        self.yaw_pwm.start(7.5)   # 90도 대기
+        self.yaw_pwm.start(7.5)   
+        self.move_to(0.0) # 정면 대기
         print("Gimbal Initialized")
 
     # non-heading
@@ -86,39 +88,87 @@ class GimbalController:
         return yaw
 
 
+    # def move_to(self, relative_rad):
+    #     """
+    #     상대 라디안 값을 받아 서보 모터 이동
+    #     relative_rad: -pi/2 (-90도) ~ pi/2 (90도) 범위를 주동력으로 사용
+    #     """
+    #     # 1. 라디안을 각도(Degree)로 변환
+    #     # 상대 각도 0(정면)일 때 서보 90도 위치로 맵핑
+    #     target_degree = math.degrees(relative_rad) + 90
+    #     print(target_degree)
+    #     # 2. 물리적 한계 제한 (0~180도)
+    #     # 서보는 180도 이상 돌 수 없으므로 클램핑(Clamping)
+    #     if target_degree < -90:
+    #         target_degree = -90
+    #     elif target_degree > 90:
+    #         target_degree = 90
+
+    #     # 3. PWM 적용
+    #     print("target_degree", target_degree)
+    #     duty = (target_degree / 18.0) + 2.5
+    #     print("duty", duty)
+    #     self.yaw_pwm.ChangeDutyCycle(duty)
+    #     # print(f"Target Rad: {relative_rad:.4f}, Servo Deg: {target_degree:.2f}")
+
     def move_to(self, relative_rad):
         """
-        상대 라디안 값을 받아 서보 모터 이동
-        relative_rad: -pi/2 (-90도) ~ pi/2 (90도) 범위를 주동력으로 사용
+        relative_rad: -pi ~ pi (상대 라디안)
+        - 0 rad: 정면 (Duty 7.5)
+        - -pi/2 rad (-90도): 왼쪽 끝 (Duty 2.5)
+        - pi/2 rad (90도): 오른쪽 끝 (Duty 12.5)
         """
-        # 1. 라디안을 각도(Degree)로 변환
-        # 상대 각도 0(정면)일 때 서보 90도 위치로 맵핑
-        target_degree = math.degrees(relative_rad) + 90
-        
-        # 2. 물리적 한계 제한 (0~180도)
-        # 서보는 180도 이상 돌 수 없으므로 클램핑(Clamping)
-        if target_degree < 0:
-            target_degree = 0
-        elif target_degree > 180:
-            target_degree = 180
+        # 1. 라디안 범위 제한 (-pi/2 ~ pi/2)
+        # 서보의 물리적 한계가 180도이므로 그 이상의 라디안은 잘라냅니다.
+        half_pi = math.pi / 2
+        if relative_rad < -half_pi:
+            relative_rad = -half_pi
+        elif relative_rad > half_pi:
+            relative_rad = half_pi
 
+        # 2. 라디안을 바로 Duty Cycle로 변환하는 공식
+        # (relative_rad / pi) * 10 + 7.5
+        """
+        설명: 
+        -pi/2 대입 시: (-0.5 * 10) + 7.5 = 2.5
+        0 대입 시: (0 * 10) + 7.5 = 7.5
+        pi/2 대입 시: (0.5 * 10) + 7.5 = 12.5
+        """
+
+        # [수정 전] : 양수(+)일 때 오른쪽으로 회전
+        # duty = (relative_rad / math.pi) * 10.0 + 7.5
+
+        # [수정 후] : 양수(+)일 때 왼쪽으로 회전 (방향 반전)
+        duty = 7.5 - (relative_rad / math.pi) * 10.0
+        
+        # 만약 결과가 2.5 미만이나 12.5를 넘으면 클램핑
+        duty = max(2.5, min(12.5, duty))
+        
         # 3. PWM 적용
-        print("target_degree", target_degree)
-        duty = (target_degree / 18.0) + 2.5
-        print("duty", duty)
+        print(f"Input Rad: {relative_rad:.4f}, Calculated Duty: {duty:.2f}")
         self.yaw_pwm.ChangeDutyCycle(duty)
-        # print(f"Target Rad: {relative_rad:.4f}, Servo Deg: {target_degree:.2f}")
+
 
     def cleanup(self):
         self.yaw_pwm.stop()
         GPIO.cleanup()
 
 if __name__ == "__main__":
-    gimbal = GimbalController()
-    my_pos = [35.134739, 129.102724]
-    target_pos = [35.134505, 129.102517] # bench
-    # target_pos = [35.135144, 129.102290] # park
-    current_heading_rad = math.radians(0.0) # 북쪽 방향 기준
-    yaw = gimbal.get_rotation_angle(my_pos, target_pos, current_heading_rad)
-    # print(yaw)
-    gimbal.move_to(yaw)
+    try:
+        gimbal = GimbalController()
+        my_pos = [35.134739, 129.102724]
+        # target_pos = [35.134505, 129.102517] # bench
+        # target_pos = [35.135144, 129.102290] # park
+        target_pos = [35.135024, 129.103050] # N,E
+        current_heading_rad = math.radians(0.0) # 북쪽 방향 기준
+        yaw = gimbal.get_rotation_angle(my_pos, target_pos, current_heading_rad)
+        # print(yaw)
+        # gimbal.move_to(0.0) # Duty 7.5 90도로 head setting
+        gimbal.move_to(yaw)
+        time.sleep(1)
+
+    except KeyboardInterrupt:
+        print("Interrupted by user")
+    finally:
+        gimbal.cleanup()
+        print("GPIO Cleaned up")
