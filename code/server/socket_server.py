@@ -4,6 +4,19 @@ import time
 from gps.sensor import GPS
 from uwb.sensor import UWB
 
+"""
+    평가 기준 후보 list :
+    1. (server, client location signal + gimbal control) time
+    -> 신호 처리 속도는 신호를 받는 거리(위성 vs transceiver)차이 때문에 아무래도 uwb가 빠를 것 같고,
+    gimbal control도 각도 계산(gps는 후처리 필요, uwb는 PDoA로 바로 받음)차이 때문에 uwb가 빠를 것 같음. (당연한 이야기..?)
+    
+    2. (camera) position accuracy
+    -> 카메라 중앙에서 얼마나 멀리 떨어져 있는지를 비교하는 방식, 시간과 같이 사용해야할 것 같긴함. 시간은 너무 뻔한 것 같아서.
+
+    3. detecting time
+    -> 내재적으로 QR을 감지하는 시간이 signal, gimbal control을 합친 시간이라, 근본적인 평가 기준은 아닌 듯 함.
+"""
+
 # --- 설정 ---
 UDP_IP = "0.0.0.0"
 UDP_PORT = 5005
@@ -15,6 +28,7 @@ gimbal = GimbalController(yaw_pin=18)
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sock.bind((UDP_IP, UDP_PORT))
 gps = GPS(port='/dev/ttyUSB0')
+# time.slee(5) # 필요 시 활성화
 location = gps.get_location()
 
 print(f"Server started at {UDP_PORT}. Waiting for data...")
@@ -36,6 +50,7 @@ try:
 
             # 수신 데이터가 [dist, az, el] 형태라면
             if header == "1": # UWB 모드
+                
                 dist, az, el = map(float, parts[1:4])
                 
                 # 1. 만약 수신된 az가 이미 상대 각도라면 계산 함수 없이 바로 이동
@@ -46,7 +61,7 @@ try:
                 # yaw = gimbal.calculate_uwb_angles(my_pos, [target_x, target_y, target_z])
 
                 gimbal.move_to(yaw)
-                print(f"[UWB] Target Az: {az} | Gimbal Yaw: {yaw:.2f}°")
+                # print(f"[UWB] Target Az: {az} | Gimbal Yaw: {yaw:.2f}°")
 
 
             else: # GPS 모드 (header가 "1"이 아닌 경우)
@@ -60,7 +75,6 @@ try:
                 
                 yaw = gimbal.calculate_gps_angles(my_pos, target_pos)
                 gimbal.move_to(yaw)
-                print(parts)
                 # print(f"[GPS target] Lat: {target_pos[0]}, Lon: {target_pos[1]} | Yaw: {yaw:.2f}°")
 
         except Exception as e:

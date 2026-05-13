@@ -13,11 +13,15 @@ class GimbalController:
         
         self.yaw_pwm = GPIO.PWM(yaw_pin, 50)
         
-        self.yaw_pwm.start(7.5)   
-        self.move_to(0.0) # 정면 대기
+        self.yaw_pwm.start(7.5)
+        # time.sleep(0.1)
+        self.move_to(0.0)
+        # time.sleep(0.1)
+        
         print("Gimbal Initialized")
 
     # non-heading
+    #Output : -pi ~ pi (정북 기준 각도)
     def calculate_gps_angles(self, my_pos, target_pos):
         """
         GPS 기반 방위각(Yaw) 계산
@@ -46,18 +50,18 @@ class GimbalController:
         """
         # 1. 타겟의 절대 방위각 계산 (기존 코드 활용)
         target_bearing_rad = self.calculate_gps_angles(my_pos, target_pos)
-        print("target_bearing_rad", target_bearing_rad)
+        # print("target_bearing_rad", target_bearing_rad)
         current_heading_rad = math.radians(current_heading)
-        print("current_heading_rad", current_heading_rad)
+        # print("current_heading_rad", current_heading_rad)
 
         # 3. 상대 각도 계산 (목표 - 현재)
         relative_rad = target_bearing_rad - current_heading_rad
-        print("relative_rad", relative_rad)
+        # print("relative_rad", relative_rad)
 
         # 4. -pi ~ pi 범위로 정규화 (가장 가까운 회전 방향 선택)
         while relative_rad > math.pi: relative_rad -= 2 * math.pi
         while relative_rad < -math.pi: relative_rad += 2 * math.pi
-        print("relative_rad after while", relative_rad)
+        # print("relative_rad after while", relative_rad)
 
         return relative_rad
 
@@ -111,6 +115,8 @@ class GimbalController:
     #     self.yaw_pwm.ChangeDutyCycle(duty)
     #     # print(f"Target Rad: {relative_rad:.4f}, Servo Deg: {target_degree:.2f}")
 
+    # Input : -pi ~ pi (정북 기준 각도)
+    # Output : 2.5 ~ 12.5 (Duty Cycle)
     def move_to(self, relative_rad):
         """
         relative_rad: -pi ~ pi (상대 라디안)
@@ -135,11 +141,11 @@ class GimbalController:
         pi/2 대입 시: (0.5 * 10) + 7.5 = 12.5
         """
 
-        # [수정 전] : 양수(+)일 때 오른쪽으로 회전
-        # duty = (relative_rad / math.pi) * 10.0 + 7.5
+        # 양수(+)일 때 오른쪽으로 회전 # 기어로 인해서 거꾸로 작동해야 최종적인 방향이 맞아짐
+        duty = (relative_rad / math.pi) * 10.0 + 7.5
 
-        # [수정 후] : 양수(+)일 때 왼쪽으로 회전 (방향 반전)
-        duty = 7.5 - (relative_rad / math.pi) * 10.0
+        # 양수(+)일 때 왼쪽으로 회전 (방향 반전) 
+        # duty = 7.5 - (relative_rad / math.pi) * 10.0
         
         # 만약 결과가 2.5 미만이나 12.5를 넘으면 클램핑
         duty = max(2.5, min(12.5, duty))
@@ -159,13 +165,22 @@ if __name__ == "__main__":
         my_pos = [35.134739, 129.102724]
         # target_pos = [35.134505, 129.102517] # bench
         # target_pos = [35.135144, 129.102290] # park
-        target_pos = [35.135024, 129.103050] # N,E
+        # target_pos = [35.135024, 129.103050] # N,E
+        target_pos = {
+            "bench" : [35.134505, 129.102517],
+            "park" : [35.135144, 129.102290],
+            "ne" : [35.135024, 129.103050]
+        }
+        place_name = "park"
         current_heading_rad = math.radians(0.0) # 북쪽 방향 기준
-        yaw = gimbal.get_rotation_angle(my_pos, target_pos, current_heading_rad)
-        # print(yaw)
+        yaw = gimbal.get_rotation_angle(my_pos, target_pos.get(place_name), current_heading_rad)
+        print("place_name : ", place_name)
+        print(yaw)
         # gimbal.move_to(0.0) # Duty 7.5 90도로 head setting
-        gimbal.move_to(yaw)
-        time.sleep(1)
+        # gimbal.move_to(yaw)
+        # time.sleep(1)
+        # gimbal.move_to(1)
+        # time.sleep(1)
 
     except KeyboardInterrupt:
         print("Interrupted by user")

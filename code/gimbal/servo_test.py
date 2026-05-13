@@ -23,9 +23,11 @@ pwm1.start(0)
 try:
     while True:
         # 서보 제어 로직
+        # pwm1.ChangeDutyCycle(2.5) # 0도
         pwm1.ChangeDutyCycle(7.5) # 90도
         # pwm2.ChangeDutyCycle(7.5) # 90도
         time.sleep(1)
+        # pwm1.ChangeDutyCycle(1) # ?도
         pwm1.ChangeDutyCycle(2.5) # 0도
         # pwm2.ChangeDutyCycle(2.5) # 0도
         time.sleep(1)
