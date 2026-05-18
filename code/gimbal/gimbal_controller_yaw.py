@@ -14,7 +14,7 @@ class GimbalController:
         self.yaw_pwm = GPIO.PWM(yaw_pin, 50)
         
         self.yaw_pwm.start(7.5)
-        # time.sleep(0.1)
+        time.sleep(1)
         self.move_to(0.0)
         # time.sleep(0.1)
         
@@ -175,8 +175,10 @@ if __name__ == "__main__":
         current_heading_rad = math.radians(0.0) # 북쪽 방향 기준
         yaw = gimbal.get_rotation_angle(my_pos, target_pos.get(place_name), current_heading_rad)
         print("place_name : ", place_name)
-        print(yaw)
-        # gimbal.move_to(0.0) # Duty 7.5 90도로 head setting
+        print("yaw : ", yaw)
+        time.sleep(1)
+        gimbal.move_to(-1) # Duty 7.5 90도로 head setting
+        time.sleep(1)
         # gimbal.move_to(yaw)
         # time.sleep(1)
         # gimbal.move_to(1)
