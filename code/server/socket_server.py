@@ -1,9 +1,12 @@
 import socket
-from gimbal.gimbal_controller_yaw import GimbalController
 import time
 import threading
+
 from gps.sensor import GPS
 from uwb.sensor import UWB
+
+from logger.result_logger import ResultLogger
+from gimbal.gimbal_controller_yaw import GimbalController
 
 # --- 설정 ---
 UDP_IP = "0.0.0.0"
@@ -25,6 +28,12 @@ latest_data_info = None
 # data_lock: 데이터 충돌 방지를 위한 키
 data_lock = threading.Lock()
 
+# CSV 로거 객체 생성 (자동으로 result 폴더 관리)
+logger = ResultLogger(base_dir="result")
+
+# 30초 뒤 정북 방향 복귀를 제어할 타이머 변수
+return_timer = None
+
 def udp_receiver_thread():
     """
     백그라운드에서 계속 실행되며 최신 타겟 위치 데이터를 갱신하는 함수
@@ -41,6 +50,12 @@ def udp_receiver_thread():
                 latest_data_info = (data, recv_time_ns)
         except Exception as e:
             print(f"[Thread Error] {e}")
+
+# 30초 뒤에 실행될 콜백 함수
+def return_home():
+    print("\n[Timer] 타겟 정렬 후 30초 경과: 짐벌을 90도로 복귀합니다.")
+    gimbal.move_to(7.5)
+    print("명령을 입력하세요 [엔터: 정렬, q: 종료] : ", end="", flush=True)
 
 # 스레드 실행 (데몬 스레드로 설정하여 메인 프로그램 종료 시 함께 종료되도록 함)
 receiver_thread = threading.Thread(target=udp_receiver_thread, daemon=True)
@@ -64,6 +79,10 @@ try:
         if current_target is None:
             print("아직 클라이언트로부터 수신된 데이터가 없습니다. 조금 더 기다려주세요.")
             continue
+        
+        # 💡 새로운 명령이 들어왔으므로, 이전의 30초 복귀 타이머가 돌고 있다면 취소함
+        if return_timer is not None:
+            return_timer.cancel()
             
         # 데이터 분해
         data, gps_recv_time_ns = current_target
@@ -76,13 +95,18 @@ try:
             parts = msg_str.split(',')
             header = parts[0]
 
+            mode_name = ""
+            tx_latency_ms = 0.0
+
             if header == "1": # UWB 모드
+                mode_name = "UWB"
                 dist, az, el = map(float, parts[1:4])
                 yaw = az 
                 gimbal.move_to(yaw)
                 print(f"[UWB] Target Az: {az} | Gimbal Yaw: {yaw:.2f}°")
 
             else: # GPS 모드
+                mode_name = "GPS"
                 my_pos = (37.5, 127.0) 
                 target_pos = [float(parts[4]), float(parts[5])] 
                 gps_read_time_ns = int(parts[6])
@@ -95,7 +119,7 @@ try:
                 print(f"tx_latency_ms: {tx_latency_ms:.2f} ms")
                 print(f"[GPS Target] Data: {parts}")
 
-            # [수정 포인트] 정렬 시간 계산
+            # 정렬 끝난 시간 계산
             align_recog_done_time_ns = time.time_ns()
             
             # 주의: 데이터 수신 시점(gps_recv_time_ns)을 기준으로 빼버리면, 사용자가 엔터를 누르기까지 
@@ -103,6 +127,35 @@ try:
             # 따라서 '명령을 내린 시점(command_time_ns)'을 빼주는 것이 물리적 구동 시간을 재는 데 더 정확합니다.
             align_recog_time_ms = (align_recog_done_time_ns - command_time_ns) / 1_000_000.0
             print(f"정렬 및 인식 소요 시간 (Alignment Time): {align_recog_time_ms:.2f} ms")
+
+            # -----------------------------------------------------------------
+            # 모듈화된 로거를 사용하여 CSV에 데이터 기록
+            # 기록 시간에 따라 하나의 행 기록하고 싶은 값 파일 별로 추가하면 됨 
+            # '미정'인 값은 나중에 딕셔너리에 추가만 해주면 CSV 컬럼이 알아서 늘어납니다!
+            # -----------------------------------------------------------------
+            if mode_name == "uwb":
+                logger.log_t_result("uwb", {
+                    # uwb 데이터 받아오는 시간
+                    "align_recog_time_ms": align_recog_time_ms,
+                })
+                logger.log_a_result("uwb", {
+                    # uwb의 정렬 정확도
+                })
+            else:
+                logger.log_t_result("gps", {
+                    "tx_latency_ms": tx_latency_ms,
+                    "align_recog_time_ms": align_recog_time_ms,
+                })
+                logger.log_a_result("gps", {
+                    # gps의 정렬 정확도
+                })
+            print(f"[{mode_name.upper()}] 결과가 result/ 폴더에 저장되었습니다.")
+
+            # -----------------------------------------------------------------
+            # 💡 30초 뒤 0도 복귀 스레드 타이머 가동
+            # -----------------------------------------------------------------
+            return_timer = threading.Timer(30.0, return_home)
+            return_timer.start()
 
         except Exception as e:
             print(f"Data processing error: {e}")
