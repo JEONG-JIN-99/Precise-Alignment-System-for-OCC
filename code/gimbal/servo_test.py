@@ -19,16 +19,15 @@ pwm1 = GPIO.PWM(SERVO_PIN1, 50) # MG995는 보통 50Hz
 # pwm2 = GPIO.PWM(SERVO_PIN2, 50) # MG995는 보통 50Hz
 pwm1.start(0)
 # pwm2.start(0)
-
+cycle = 2.5
 try:
     while True:
         # 서보 제어 로직
-        pwm1.ChangeDutyCycle(7.5) # 90도
-        # pwm2.ChangeDutyCycle(7.5) # 90도
-        time.sleep(1)
-        pwm1.ChangeDutyCycle(2.5) # 0도
+        pwm1.ChangeDutyCycle(cycle) # 0도
         # pwm2.ChangeDutyCycle(2.5) # 0도
         time.sleep(1)
+        print("cycle", cycle)
+        cycle += 0.01
 except KeyboardInterrupt:
     print("프로그램 종료")
     pwm1.ChangeDutyCycle(2.5)

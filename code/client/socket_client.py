@@ -17,7 +17,9 @@ PORT = 5005
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 gps = GPS(port='/dev/ttyUSB0')
 
-while True: 
+while True:
+    # 센서값 읽어온 시간
+    gps_read_time_ns = time.time_ns()
     # 센서 update 속도에 맞춰서 해야함 (ms 정도의 속도)
     # GPS 모듈에서 읽어온 실제 좌표라고 가정
     # mode, dist, az, elev, lat, lng = GPS
@@ -27,8 +29,12 @@ while True:
     if location:
         # print(f"위도: {location['lat']:.6f}, 경도: {location['lon']:.6f}, 시간: {location['time']}")
         mode, dist, az, elev, lat, lng = 0,0,0,0,location['lat'],location['lon']
-        message = f"{mode},{dist},{az},{elev},{lat},{lng}"
+        message = (
+            f"{mode},{dist},{az},{elev},{lat},{lng},"
+            f"{gps_read_time_ns}"
+        )
         sock.sendto(message.encode(), (GIMBAL_IP, PORT))
+        print(f"transmission message: {message}")
         time.sleep(0.1) # 10Hz 출력
     else:
         print("신호를 기다리는 중 (GPS 고정 안 됨)...")
