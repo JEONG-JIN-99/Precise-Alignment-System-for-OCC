@@ -12,7 +12,7 @@ Optical Camera Communication(OCC) 통신을 위한 GPS UWB 기반의 짐벌 정�
   * 정렬 명령 하달 시, 수신된 정보를 기반으로 짐벌을 정렬하고 실험 데이터를 기록합니다.
   * 작동 30초 후에 짐벌을 90도로 초기화합니다.
 * **`client/socket_client.py`**
-  * GPS 모듈로부터 Raw 데이터를 받아 서버로 실시간 전송합니다.
+  * GPS 모듈로부터 Raw 데이터를 받아 서버로 실시간 전송합니다.(GPS만 UWB는 구현 X)
 
 ### 🎮 Control (짐벌 제어)
 * **`gimbal/gimbal_controller_yaw.py`**
@@ -38,4 +38,4 @@ Optical Camera Communication(OCC) 통신을 위한 GPS UWB 기반의 짐벌 정�
 ---
 
 ## ⚠️ 참고 사항 (Status Notes)
-* **미구현 기능:** `uwb/sensor.py` 및 `gimbal_controller_yaw.py` 내의 UWB 관련 로직은 현재 구현되지 않은 상태입니다.
+* **미구현 기능:** `client/socket_client.py`, `uwb/sensor.py` 및 `gimbal/gimbal_controller_yaw.py` 내의 UWB 관련 로직은 현재 구현되지 않은 상태입니다.
