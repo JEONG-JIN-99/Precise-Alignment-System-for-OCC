@@ -1,4 +1,5 @@
 import math
+import time
 import RPi.GPIO as GPIO
 
 # packet set
@@ -11,8 +12,14 @@ class GimbalController:
         GPIO.setup(yaw_pin, GPIO.OUT)
         
         self.yaw_pwm = GPIO.PWM(yaw_pin, 50)
-        
         self.yaw_pwm.start(7.5)   # 90도 대기
+
+        #현재 짐벌의 물리적 각도를 저장 (초기값 90도)
+        self.current_degree = 90.0
+        # 서보 모터의 사양에 따른 동작 속도 (초당 회전 가능한 각도)
+        # SG995 서보 기준: 0.2초당 60도 이동 가능(4.8V 기준)
+        self.SERVO_SPEED_SEC_PER_DEG = 0.2 / 60.0
+
         print("Gimbal Initialized")
 
     # non-heading
@@ -102,11 +109,25 @@ class GimbalController:
         elif target_degree > 180:
             target_degree = 180
 
-        # 3. PWM 적용
+        # 3. 현재 각도와 목표 각도의 차이(이동 거리) 계산
+        delta_degree = abs(target_degree - self.current_degree)
+
+        # 4. PWM 적용
         print("target_degree", target_degree)
         duty = (target_degree / 18.0) + 2.5
         print("duty", duty)
         self.yaw_pwm.ChangeDutyCycle(duty)
+
+        # 5. 이동할 각도에 비례하여 물리적으로 회전할 때까지 CPU를 붙잡아둠 (Blocking)
+        move_time = delta_degree * self.SERVO_SPEED_SEC_PER_DEG
+        
+        # 급격한 반전 시 모터의 부하(관성)를 고려해 최소 대기 시간이나 마진(예: +0.05초)을 더해주면 더 안정적
+        if move_time > 0:
+            time.sleep(move_time + 0.02) # 20ms 마진 추가
+            
+        # 6. 이동이 끝났으므로 현재 위치를 목표 위치로 갱신
+        self.current_degree = target_degree
+        print(f"Movement Done. Blocked for {move_time:.4f}s")
         # print(f"Target Rad: {relative_rad:.4f}, Servo Deg: {target_degree:.2f}")
 
     def cleanup(self):
