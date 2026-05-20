@@ -21,8 +21,11 @@ class GimbalController:
         self.SERVO_SPEED_SEC_PER_DEG = 0.2 / 60.0
 
         print("Gimbal Initialized")
+        time.sleep(1.0)
 
     # non-heading
+    # input: 내 위치(my_pos)와 타겟 위치(target_pos)의 위도, 경도 값
+    # output: 라디안 값으로 방위각 반환 
     def calculate_gps_angles(self, my_pos, target_pos):
         """
         GPS 기반 방위각(Yaw) 계산
@@ -41,7 +44,6 @@ class GimbalController:
             math.sin(my_lat) * math.cos(tar_lat) * math.cos(d_lon)
         
         yaw = math.atan2(y, x)
-
         return yaw
 
     # 북쪽을 바라보고 있다는 제약 (아래의 코드 사용하려면, 기존 gimbal의 각도(current_heading)에 대해 알고 있어야함.)
@@ -92,15 +94,20 @@ class GimbalController:
         
         return yaw
 
-
+    # input: 라디안 값으로 들어오는 방위각
+    # output: 서보 모터 이동
     def move_to(self, relative_rad):
         """
         상대 라디안 값을 받아 서보 모터 이동
         relative_rad: -pi/2 (-90도) ~ pi/2 (90도) 범위를 주동력으로 사용
         """
         # 1. 라디안을 각도(Degree)로 변환
+        # 디버깅 표시용 각도는 -90~90도 기준으로 사용
+        input_az_degree = math.degrees(relative_rad)
+
         # 상대 각도 0(정면)일 때 서보 90도 위치로 맵핑
-        target_degree = math.degrees(relative_rad) + 90
+        # target_degree: 0~180도 범위를 주동력으로 사용 모터는 반시계 방향으로 회전을 함
+        target_degree = input_az_degree + 90
         
         # 2. 물리적 한계 제한 (0~180도)
         # 서보는 180도 이상 돌 수 없으므로 클램핑(Clamping)
@@ -109,13 +116,27 @@ class GimbalController:
         elif target_degree > 180:
             target_degree = 180
 
+        # 내부 0~180도 값을 다시 디버깅용 -90~90도 값으로 변환
+        target_az_degree = target_degree - 90
+        current_az_degree = self.current_degree - 90
+
+        # # [핵심 수정] 기어 반전 적용
+        # # 실제 기계가 target_degree(예: 120도)로 가길 원한다면, 
+        # # 반대로 도는 모터는 (180 - 120) = 60도 지점으로 명령을 내려야 합니다.
+        # motor_target_degree = 180.0 - target_degree
+
         # 3. 현재 각도와 목표 각도의 차이(이동 거리) 계산
         delta_degree = abs(target_degree - self.current_degree)
 
         # 4. PWM 적용
-        print("target_degree", target_degree)
+        print(
+            f"입력 각도: {input_az_degree:.2f}도, "
+            f"현재: {current_az_degree:.2f}도 -> 목표: {target_az_degree:.2f}도 "
+            f"(모터 명령: {target_degree:.2f}도)"
+        )
+        # 반대반향 회전 기어를 고려한 듀티 사이클 계산
         duty = (target_degree / 18.0) + 2.5
-        print("duty", duty)
+        print(f"duty: {duty:.4f}")
         self.yaw_pwm.ChangeDutyCycle(duty)
 
         # 5. 이동할 각도에 비례하여 물리적으로 회전할 때까지 CPU를 붙잡아둠 (Blocking)
@@ -127,7 +148,7 @@ class GimbalController:
             
         # 6. 이동이 끝났으므로 현재 위치를 목표 위치로 갱신
         self.current_degree = target_degree
-        print(f"Movement Done. Blocked for {move_time:.4f}s")
+        print(f"Movement Done. 이동량: {delta_degree:.2f}도, Blocked for {move_time:.4f}s")
         # print(f"Target Rad: {relative_rad:.4f}, Servo Deg: {target_degree:.2f}")
 
     def cleanup(self):
@@ -136,10 +157,13 @@ class GimbalController:
 
 if __name__ == "__main__":
     gimbal = GimbalController()
-    my_pos = [35.134739, 129.102724]
-    target_pos = [35.134505, 129.102517] # bench
+    # my_pos = [35.134739, 129.102724]
+    # # target_pos = [35.134505, 129.102517] # bench
     # target_pos = [35.135144, 129.102290] # park
-    current_heading_rad = math.radians(0.0) # 북쪽 방향 기준
-    yaw = gimbal.get_rotation_angle(my_pos, target_pos, current_heading_rad)
+    # current_heading = 0.0 # 북쪽 방향 기준
+    # yaw = gimbal.calculate_gps_angles(my_pos, target_pos)
     # print(yaw)
-    gimbal.move_to(yaw)
+    gimbal.move_to(math.radians(-90))
+    time.sleep(5)
+    gimbal.move_to(math.radians(90))
+    time.sleep(5)

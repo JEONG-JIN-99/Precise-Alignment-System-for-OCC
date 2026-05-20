@@ -53,7 +53,7 @@ def udp_receiver_thread():
 
 # 30초 뒤에 실행될 콜백 함수
 def return_home():
-    print("\n[Timer] 타겟 정렬 후 30초 경과: 짐벌을 90도로 복귀합니다.")
+    print("\n[Timer] 타겟 정렬 후 10초 경과: 짐벌을 90도로 복귀합니다.")
     gimbal.move_to(7.5)
     print("명령을 입력하세요 [엔터: 정렬, q: 종료] : ", end="", flush=True)
 
@@ -113,6 +113,7 @@ try:
 
                 yaw = gimbal.calculate_gps_angles(my_pos, target_pos)
                 gimbal.move_to(yaw)
+                print(f"[GPS] Target Yaw: {yaw}° | Gimbal Yaw: {yaw:.2f}°")
 
                 # 참고: 데이터 송신부터 수신까지의 지연 시간 (이건 백그라운드 수신 기준이므로 그대로 써도 됨)
                 tx_latency_ms = (gps_recv_time_ns - gps_read_time_ns) / 1_000_000.0
@@ -136,6 +137,7 @@ try:
             if mode_name == "uwb":
                 logger.log_t_result("uwb", {
                     # uwb 데이터 받아오는 시간
+                    "Target Az": az,
                     "align_recog_time_ms": align_recog_time_ms,
                 })
                 logger.log_a_result("uwb", {
@@ -143,8 +145,9 @@ try:
                 })
             else:
                 logger.log_t_result("gps", {
-                    "tx_latency_ms": tx_latency_ms,
+                    "Target Yaw": yaw,
                     "align_recog_time_ms": align_recog_time_ms,
+                    "tx_latency_ms": tx_latency_ms,
                 })
                 logger.log_a_result("gps", {
                     # gps의 정렬 정확도
@@ -152,9 +155,9 @@ try:
             print(f"[{mode_name.upper()}] 결과가 result/ 폴더에 저장되었습니다.")
 
             # -----------------------------------------------------------------
-            # 💡 30초 뒤 0도 복귀 스레드 타이머 가동
+            # 💡 10초 뒤 90도 복귀 스레드 타이머 가동
             # -----------------------------------------------------------------
-            return_timer = threading.Timer(30.0, return_home)
+            return_timer = threading.Timer(10.0, return_home)
             return_timer.start()
 
         except Exception as e:
