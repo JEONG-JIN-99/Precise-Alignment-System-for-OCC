@@ -144,8 +144,8 @@ try:
                     yaw_deg = math.degrees(yaw)
                     
                     # 💡 타겟 각도 디그리 -> 라디안 변환 후 짐벌 이동
-                    gimbal.move_to(yaw)
-                    print(f"[UWB] Target Az: {yaw_deg}°")
+                    delta_degree = gimbal.move_to(yaw)
+                    print(f"[UWB] Target Az: {yaw_deg}° | delta_degree: {delta_degree:.2f}°")
 
                 else: # GPS 모드
                     mode_name = "gps"
@@ -159,8 +159,8 @@ try:
                     yaw_deg = math.degrees(yaw)
                     
                     # 💡 타겟 각도 디그리 -> 라디안 변환 후 짐벌 이동
-                    gimbal.move_to(yaw)
-                    print(f"[GPS] Target Yaw: {yaw_deg}°")
+                    delta_degree = gimbal.move_to(yaw)
+                    print(f"[GPS] Target Yaw: {yaw_deg}° | delta_degree: {delta_degree:.2f}°")
 
                     tx_latency_ms = (gps_recv_time_ns - gps_read_time_ns) / 1_000_000.0
                     print(f"tx_latency_ms: {tx_latency_ms:.2f} ms")
@@ -185,11 +185,13 @@ try:
                     logger.log_t_result("uwb", {
                         "start_angle_deg": start_angle_deg,
                         "Target Az": yaw_deg,
+                        "delta_degree": delta_degree,
                         "align_recog_time_ms": align_recog_time_ms,
                     })
                     logger.log_a_result("uwb", {
                         "start_angle_deg": start_angle_deg,
                         "Target Az": yaw_deg,
+                        "delta_degree": delta_degree,
                         "qr_detected": qr_detected,
                         "qr_data": qr_data,
                         "qr_distance_px": qr_distance_px,
@@ -198,12 +200,14 @@ try:
                     logger.log_t_result("gps", {
                         "start_angle_deg": start_angle_deg,
                         "Target Az": yaw_deg,
+                        "delta_degree": delta_degree,
                         "align_recog_time_ms": align_recog_time_ms,
                         "tx_latency_ms": tx_latency_ms,
                     })
                     logger.log_a_result("gps", {
                         "start_angle_deg": start_angle_deg,
                         "Target Az": yaw_deg,
+                        "delta_degree": delta_degree,
                         "qr_detected": qr_detected,
                         "qr_data": qr_data,
                         "qr_distance_px": qr_distance_px,

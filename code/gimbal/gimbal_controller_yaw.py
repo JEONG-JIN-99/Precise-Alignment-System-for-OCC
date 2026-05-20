@@ -149,7 +149,8 @@ class GimbalController:
         # 6. 이동이 끝났으므로 현재 위치를 목표 위치로 갱신
         self.current_degree = target_degree
         print(f"Movement Done. 이동량: {delta_degree:.2f}도, Blocked for {move_time:.4f}s")
-        # print(f"Target Rad: {relative_rad:.4f}, Servo Deg: {target_degree:.2f}")
+        
+        return delta_degree
 
     def cleanup(self):
         self.yaw_pwm.stop()
