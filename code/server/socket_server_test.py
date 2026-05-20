@@ -14,10 +14,16 @@ from uwb.sensor import UWB
 
 from logger.result_logger import ResultLogger
 from gimbal.gimbal_controller_yaw import GimbalController
+from qr.scanner import SmartPhoneScanner
+from qr.one_shot_scanner import OneShotQRScanner
 
-# --- 설정 ---
+# --- 통신 설정 ---
 UDP_IP = "0.0.0.0"
 UDP_PORT = 5005
+
+# --- 스마트폰 설정 ---
+PHONE_IP = "192.168.0.6"
+PHONE_PORT = "8080"
 
 # 짐벌 객체 생성
 gimbal = GimbalController(yaw_pin=18)
@@ -38,6 +44,9 @@ data_lock = threading.Lock()
 
 # CSV 로거 객체 생성 (자동으로 result 폴더 관리)
 logger = ResultLogger(base_dir="result")
+
+# QR 스캐너 객체 생성
+qr_scanner = OneShotQRScanner(PHONE_IP, PHONE_PORT)
 
 def udp_receiver_thread():
     """
@@ -156,7 +165,17 @@ try:
                     tx_latency_ms = (gps_recv_time_ns - gps_read_time_ns) / 1_000_000.0
                     print(f"tx_latency_ms: {tx_latency_ms:.2f} ms")
 
-                # 정렬 끝난 시간 계산
+                # QR 인식
+                qr_result = qr_scanner.scan_once(timeout_sec=3.0)
+                if qr_result is None:
+                    print("[QR] 인식 실패")
+                else:
+                    qr_detected = True
+                    qr_data = qr_result["data"]
+                    qr_distance_px = qr_result["distance_px"]
+                    print(f"[QR] data={qr_data}, distance={qr_distance_px:.2f}px")
+
+                # 정렬 및 인식 끝난 시간 계산
                 align_recog_done_time_ns = time.time_ns()
                 align_recog_time_ms = (align_recog_done_time_ns - command_time_ns) / 1_000_000.0
                 print(f"정렬 및 인식 소요 시간 (Alignment Time): {align_recog_time_ms:.2f} ms")
@@ -169,7 +188,11 @@ try:
                         "align_recog_time_ms": align_recog_time_ms,
                     })
                     logger.log_a_result("uwb", {
-                        # 인식 정확도
+                        "start_angle_deg": start_angle_deg,
+                        "Target Az": yaw_deg,
+                        "qr_detected": qr_detected,
+                        "qr_data": qr_data,
+                        "qr_distance_px": qr_distance_px,
                     })
                 else:
                     logger.log_t_result("gps", {
@@ -179,7 +202,11 @@ try:
                         "tx_latency_ms": tx_latency_ms,
                     })
                     logger.log_a_result("gps", {
-
+                        "start_angle_deg": start_angle_deg,
+                        "Target Az": yaw_deg,
+                        "qr_detected": qr_detected,
+                        "qr_data": qr_data,
+                        "qr_distance_px": qr_distance_px,
                     })
                     
                 print(f"[{mode_name.upper()}] {i+1}회차 결과 로깅 완료.")
