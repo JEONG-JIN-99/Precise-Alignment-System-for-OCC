@@ -7,10 +7,14 @@ Optical Camera Communication(OCC) 통신을 위한 GPS UWB 기반의 짐벌 정�
 ## 📂 프로젝트 구조 및 주요 기능 (Directory Structure)
 
 ### 🛰️ Connection & Core (클라이언트 / 서버)
+* **`server/socket_server_test.py`**
+  * 백그라운드에서 상시로 정보를 수신합니다. (GPS만 UWB는 구현 X)
+  * 10개의 값을 읽어와서 초기 헤딩으로 설정 정렬 명령을 10번 반복하며 실험 데이터를 기록합니다.
+  * 실험이 끝나면 짐벌을 0도로 초기화합니다.
 * **`server/socket_server.py`**
   * 백그라운드에서 상시로 정보를 수신합니다. (GPS만 UWB는 구현 X)
   * 정렬 명령 하달 시, 수신된 정보를 기반으로 짐벌을 정렬하고 실험 데이터를 기록합니다.
-  * 작동 30초 후에 짐벌을 90도로 초기화합니다.
+  * 작동 30초 후에 짐벌을 0도로 초기화합니다.
 * **`client/socket_client.py`**
   * GPS 모듈로부터 Raw 데이터를 받아 서버로 실시간 전송합니다.(GPS만 UWB는 구현 X)
 
