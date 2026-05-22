@@ -82,7 +82,8 @@ try:
             
         # 내가 만든 파일(start_positions.txt)에서 출발 위치(디그리) 읽어오기
         start_angles = []
-        file_name = "start_positions.txt"
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        file_name = os.path.join(os.path.dirname(script_dir), "start_positions.txt")
         
         if os.path.exists(file_name):
             with open(file_name, "r") as f:
@@ -103,6 +104,11 @@ try:
         
         # 2-1 과정을 10번 반복
         for i in range(10):
+            # QR 결과 초기화 (이전 루프의 잔존 데이터 오염 및 NameError 방지)
+            qr_detected = False
+            qr_data = None
+            qr_distance_px = None
+
             # 파일에서 읽어온 임의의 출발 위치(디그리) 선택
             start_angle_deg = start_angles[i % len(start_angles)]
             
