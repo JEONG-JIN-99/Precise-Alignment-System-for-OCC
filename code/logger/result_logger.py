@@ -12,6 +12,8 @@ class ResultLogger:
         code_dir = os.path.dirname(logger_dir)     # .../code
         project_root = os.path.dirname(code_dir)   # .../2026icufn(최상단 루트)
         
+        # print("project_root : ", project_root)
+
         # 3. 프로젝트 최상단 루트 아래에 "result" 폴더 경로를 합침
         # 예: /home/ciderlab/2026icufn/result
         self.base_dir = os.path.join(project_root, target_dir_name)
@@ -51,3 +53,7 @@ class ResultLogger:
                 writer.writeheader()
                 
             writer.writerow(data_dict)
+
+
+if __name__ == "__main__":
+    logger = ResultLogger("result")

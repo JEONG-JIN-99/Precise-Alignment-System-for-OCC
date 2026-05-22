@@ -33,7 +33,7 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sock.bind((UDP_IP, UDP_PORT))
 
 # GPS 객체 생성
-gps = GPS(port='/dev/ttyUSB0')
+# gps = GPS(port='/dev/ttyUSB0')
 # gps.update()
 # location = gps.get_location()
 # my_pos = (location['lat'], location['lon'])
@@ -43,7 +43,7 @@ latest_data_info = None
 data_lock = threading.Lock()
 
 # CSV 로거 객체 생성 (자동으로 result 폴더 관리)
-logger = ResultLogger(base_dir="result")
+logger = ResultLogger(target_dir_name="result")
 
 # QR 스캐너 객체 생성
 qr_scanner = OneShotQRScanner(PHONE_IP, PHONE_PORT)
