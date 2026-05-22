@@ -147,10 +147,10 @@ try:
                     mode_name = "uwb"
                     dist, az, el = map(float, parts[1:4])
                     yaw = az 
-                    yaw_deg = math.degrees(yaw)
+                    yaw_deg = yaw
                     
                     # 💡 타겟 각도 디그리 -> 라디안 변환 후 짐벌 이동
-                    delta_degree = gimbal.move_to(yaw)
+                    delta_degree = gimbal.move_to(math.radians(yaw))
                     print(f"[UWB] Target Az: {yaw_deg}° | delta_degree: {delta_degree:.2f}°")
 
                 else: # GPS 모드
