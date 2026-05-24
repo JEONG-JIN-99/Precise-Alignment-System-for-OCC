@@ -129,14 +129,8 @@ class GimbalController:
         delta_degree = abs(target_degree - self.current_degree)
 
         # 4. PWM 적용
-        print(
-            f"입력 각도: {input_az_degree:.2f}도, "
-            f"현재: {current_az_degree:.2f}도 -> 목표: {target_az_degree:.2f}도 "
-            f"(모터 명령: {target_degree:.2f}도)"
-        )
         # 반대반향 회전 기어를 고려한 듀티 사이클 계산
         duty = (target_degree / 18.0) + 2.5
-        print(f"duty: {duty:.4f}")
         self.yaw_pwm.ChangeDutyCycle(duty)
 
         # 5. 이동할 각도에 비례하여 물리적으로 회전할 때까지 CPU를 붙잡아둠 (Blocking)
@@ -148,7 +142,17 @@ class GimbalController:
             
         # 6. 이동이 끝났으므로 현재 위치를 목표 위치로 갱신
         self.current_degree = target_degree
-        print(f"Movement Done. 이동량: {delta_degree:.2f}도, Blocked for {move_time:.4f}s")
+        print(
+            "\n[ GIMBAL MOVE ]\n"
+            f"입력 각도      : {input_az_degree:.2f}도\n"
+            f"현재 각도      : {current_az_degree:.2f}도\n"
+            f"이동 후 각도   : {target_az_degree:.2f}도\n"
+            f"모터 명령      : {target_degree:.2f}도\n"
+            f"Duty Cycle     : {duty:.4f}\n"
+            f"이동량         : {delta_degree:.2f}도\n"
+            f"이동 시간      : {move_time:.4f}s\n"
+            "[ /GIMBAL MOVE ]"
+        )
         
         return delta_degree
 

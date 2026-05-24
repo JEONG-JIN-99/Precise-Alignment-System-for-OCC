@@ -26,23 +26,10 @@ try:
     # while True:
         # 서보 제어 로직
     pwm1.ChangeDutyCycle(7.5)
-    print("cycle 7.5")
+    print("정북정렬")
     time.sleep(10)
-
-    pwm1.ChangeDutyCycle(12.5)
-    print("cycle 12.5")
-    time.sleep(10)
-
-    pwm1.ChangeDutyCycle(2.5)
-    print("cycle 2.5")
-    time.sleep(10)
-
-
 except KeyboardInterrupt:
     print("프로그램 종료")
-    pwm1.ChangeDutyCycle(2.5)
-    # pwm2.ChangeDutyCycle(2.5)
-    time.sleep(0.5)
 finally:
     pwm1.stop()        # PWM 정지
     # pwm2.stop()        # PWM 정지

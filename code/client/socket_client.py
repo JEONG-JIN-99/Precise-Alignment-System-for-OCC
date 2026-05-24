@@ -9,13 +9,14 @@ from uwb.sensor import UWB
 
 # 짐벌 파이의 IP 주소
 # cier
-# GIMBAL_IP = "192.168.0.32" 
+GIMBAL_IP = "192.168.0.32" 
 # hotspot
-GIMBAL_IP = "10.185.103.85" 
+
+# GIMBAL_IP = "10.185.103.85" 
 PORT = 5005
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-gps = GPS(port='/dev/ttyUSB0')
+# gps = GPS(port='/dev/ttyUSB0')
 
 while True:
     # 센서값 읽어온 시간
@@ -23,12 +24,14 @@ while True:
     # 센서 update 속도에 맞춰서 해야함 (ms 정도의 속도)
     # GPS 모듈에서 읽어온 실제 좌표라고 가정
     # mode, dist, az, elev, lat, lng = GPS
-    gps.update()  # 데이터를 계속 갱신
-    location = gps.get_location()
+    # gps.update()  # 데이터를 계속 갱신
+    # location = gps.get_location()
+
+    
             
-    if location:
+    if True: #location:
         # print(f"위도: {location['lat']:.6f}, 경도: {location['lon']:.6f}, 시간: {location['time']}")
-        mode, dist, az, elev, lat, lng = 0,0,0,0,location['lat'],location['lon']
+        mode, dist, az, elev, lat, lng = 0,0,0,0,35.135144, 129.102290 #location['lat'],location['lon']
         message = (
             f"{mode},{dist},{az},{elev},{lat},{lng},"
             f"{gps_read_time_ns}"

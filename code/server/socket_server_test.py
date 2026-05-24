@@ -86,6 +86,7 @@ try:
         file_name = os.path.join(os.path.dirname(script_dir), "start_positions.txt")
         
         if os.path.exists(file_name):
+            print(f"파일 읽기 성공: {file_name}")
             with open(file_name, "r") as f:
                 for line in f:
                     val = line.strip()
@@ -230,7 +231,7 @@ try:
         # -----------------------------------------------------------------
         # 10회 반복이 끝난 후 본 위치인 90도로 정렬
         # -----------------------------------------------------------------
-        print("\n[실험 종료] 10회 반복을 마쳤습니다. 짐벌을 본 위치(90도)로 복귀합니다.")
+        print("\n[실험 종료] 10회 반복을 마쳤습니다. 짐벌을 본 위치(0도)로 복귀합니다.")
         
         # 💡 복귀 각도 라디안으로 변환 (90.0도)
         gimbal.move_to(math.radians(0.0))
