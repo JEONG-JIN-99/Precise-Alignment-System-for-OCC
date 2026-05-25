@@ -39,6 +39,7 @@ Thumbs.db
 # Codex/local agent metadata
 .agents/
 .codex/
+.antigravitycli/
 
 # Archives generated from source
 *.zip

@@ -84,8 +84,9 @@ if __name__ == "__main__":
         # 1. 시계방향 테스트 (GPS 모사)
         # 내 위치 기준 동쪽에 타겟이 위치하는 상황 -> 시계방향 회전
         print("\n[테스트 1] 시계방향 회전 시작 (+90도 방향으로 duty 0.1씩 조절)")
-        my_pos = (37.5, 127.0)
-        target_pos = (37.5, 127.1)
+        my_pos = (35.134761, 129.102698)
+        target_pos = (35.135145, 129.103154) # 약 +45도
+        #target_pos = (35.135014, 129.102441) # 약 -45도
         controller.step_move_by_data('gps', my_pos=my_pos, target_pos=target_pos)
         print(f"회전 완료 - 현재 물리 각도: {controller.current_degree:.2f}도")
         time.sleep(2.0)
@@ -93,7 +94,7 @@ if __name__ == "__main__":
         # 2. 반시계방향 테스트 (UWB 모사)
         # UWB 방위각 음수값 수신 -> 반시계방향 회전
         print("\n[테스트 2] 반시계방향 회전 시작 (-90도 방향으로 duty 0.1씩 조절)")
-        controller.step_move_by_data('uwb', azimuth=-1.0)
+        controller.step_move_by_data('uwb', azimuth=-30.0)
         print(f"회전 완료 - 현재 물리 각도: {controller.current_degree:.2f}도")
         time.sleep(2.0)
         

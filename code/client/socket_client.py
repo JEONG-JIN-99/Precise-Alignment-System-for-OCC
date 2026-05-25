@@ -31,7 +31,9 @@ while True:
             
     if True: #location:
         # print(f"위도: {location['lat']:.6f}, 경도: {location['lon']:.6f}, 시간: {location['time']}")
-        mode, dist, az, elev, lat, lng = 0,0,0,0,35.135144, 129.102290 #location['lat'],location['lon']
+        target_pos = (35.135145, 129.103154) # 약 +45도
+        #target_pos = (35.135014, 129.102441) # 약 -45도
+        mode, dist, az, elev, lat, lng = 0,0,0,0,target_pos[0], target_pos[1] #location['lat'],location['lon']
         message = (
             f"{mode},{dist},{az},{elev},{lat},{lng},"
             f"{gps_read_time_ns}"

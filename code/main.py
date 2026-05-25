@@ -164,7 +164,7 @@ try:
                 else: # GPS 모드
                     mode_name = "gps"
                     # 내 위치 하드 코딩 
-                    my_pos = (37.5, 127.0) 
+                    my_pos = (35.134761, 129.102698) 
 
                     target_pos = [float(parts[4]), float(parts[5])] 
                     gps_read_time_ns = int(parts[6])
