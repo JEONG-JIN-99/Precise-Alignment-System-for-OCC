@@ -138,8 +138,12 @@ class GimbalController:
         
         # 급격한 반전 시 모터의 부하(관성)를 고려해 최소 대기 시간이나 마진(예: +0.05초)을 더해주면 더 안정적
         if move_time > 0:
-            time.sleep(move_time + 0.02) # 20ms 마진 추가
-            
+            time.sleep(move_time + 0.05) # 20ms 마진 추가
+
+        # 이동이 끝났으므로 듀티 사이클을 0으로 만들어 신호를 차단합니다.
+        # 이렇게 하면 모터 내부 모스펫이 열을 받거나 지터링이 생기는 것을 완전히 방지합니다.
+        self.yaw_pwm.ChangeDutyCycle(0)
+
         # 6. 이동이 끝났으므로 현재 위치를 목표 위치로 갱신
         self.current_degree = target_degree
         print(

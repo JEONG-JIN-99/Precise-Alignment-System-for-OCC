@@ -22,7 +22,7 @@ UDP_IP = "0.0.0.0"
 UDP_PORT = 5005
 
 # --- 스마트폰 설정 ---
-PHONE_IP = "192.168.0.6"
+PHONE_IP = "192.168.0.11"
 PHONE_PORT = "8080"
 
 # 짐벌 객체 생성
@@ -47,6 +47,8 @@ logger = ResultLogger(target_dir_name="result")
 
 # QR 스캐너 객체 생성
 qr_scanner = OneShotQRScanner(PHONE_IP, PHONE_PORT)
+# warm-up
+# qr_scanner.scan_once(timeout_sec=0.1)
 
 def load_start_angles():
     """
@@ -134,7 +136,7 @@ try:
                 
             if current_target is None:
                 print("아직 클라이언트로부터 수신된 데이터가 없습니다. 이번 회차는 건너뜁니다.")
-                time.sleep(5.0) # 데이터가 없어도 실험 주기를 맞추기 위해 5초 대기
+                time.sleep(1.0) # 데이터가 없어도 실험 주기를 맞추기 위해 1초 대기
                 continue
                 
             # 데이터 분해
@@ -233,7 +235,7 @@ try:
                 print(f"Data processing error in iteration {i+1}: {e}")
 
             # 타겟 위치까지 정렬을 마친 뒤 5초간 대기
-            time.sleep(5.0)
+            time.sleep(1.0)
 
         # -----------------------------------------------------------------
         # 10회 반복이 끝난 후 본 위치인 90도로 정렬
