@@ -20,6 +20,7 @@ class GimbalController:
         # SG995 서보 기준: 0.2초당 60도 이동 가능(4.8V 기준)
         self.SERVO_SPEED_SEC_PER_DEG = 0.2 / 60.0
 
+        self.yaw_pwm.ChangeDutyCycle(0)
         print("Gimbal Initialized")
         time.sleep(1.0)
 

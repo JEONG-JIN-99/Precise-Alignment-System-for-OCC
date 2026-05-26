@@ -27,7 +27,8 @@ try:
         # 서보 제어 로직
     pwm1.ChangeDutyCycle(7.5)
     print("정북정렬")
-    time.sleep(10)
+    time.sleep(1)
+    pwm1.ChangeDutyCycle(0)
 except KeyboardInterrupt:
     print("프로그램 종료")
 finally:

@@ -4,7 +4,7 @@ import time
 import math
 
 # 스마트폰 IP Webcam 주소
-stream_url = "http://192.168.0.6:8080/video"
+stream_url = "http://10.62.175.213:8080/video"
 
 def start_scanner():
     print(f"Connecting to: {stream_url}")

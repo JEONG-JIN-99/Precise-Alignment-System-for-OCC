@@ -22,7 +22,8 @@ UDP_IP = "0.0.0.0"
 UDP_PORT = 5005
 
 # --- 스마트폰 설정 ---
-PHONE_IP = "192.168.0.11"
+# PHONE_IP = "10.62.175.213"
+PHONE_IP = "192.168.0.6"
 PHONE_PORT = "8080"
 
 # 짐벌 객체 생성
@@ -46,7 +47,8 @@ data_lock = threading.Lock()
 logger = ResultLogger(target_dir_name="result")
 
 # QR 스캐너 객체 생성
-qr_scanner = OneShotQRScanner(PHONE_IP, PHONE_PORT)
+# 수정
+qr_scanner = OneShotQRScanner(PHONE_IP, PHONE_PORT, crop_scale=1.0)
 # warm-up
 # qr_scanner.scan_once(timeout_sec=0.1)
 
@@ -92,12 +94,12 @@ receiver_thread = threading.Thread(target=udp_receiver_thread, daemon=True)
 receiver_thread.start()
 
 print("\n=== 짐벌 제어 서버가 준비되었습니다 ===")
-print("명령 대기 중... (엔터키를 누르면 10회 반복 실험을 시작합니다. 'q'를 누르면 종료)")
+print("명령 대기 중... (엔터키를 누르면 22회 반복 실험을 시작합니다. 'q'를 누르면 종료)")
 
 try:
     while True:
         # 사용자 명령 대기 (Blocking)
-        command = input("\n명령을 입력하세요 [엔터: 10회 실험 시작, q: 종료] : ")
+        command = input("\n명령을 입력하세요 [엔터:22회 실험 시작, q: 종료] : ")
         
         if command.lower() == 'q':
             break
@@ -110,10 +112,10 @@ try:
             print(f"경고: '{file_name}' 파일이 없거나 데이터를 읽을 수 없습니다. 기본 임의 각도로 진행합니다.")
             start_angles = [-60.0, -50.0, -40.0, -30.0, -20.0, 20.0, 30.0, 40.0, 50.0, 60.0]
             
-        print("\n--- 10회 반복 실험을 시작합니다 ---")
+        print("\n--- 22회 반복 실험을 시작합니다 ---")
         
-        # 2-1 과정을 10번 반복
-        for i in range(10):
+        # 2-1 과정을 22번 반복
+        for i in range(22):
             # QR 결과 초기화 (이전 루프의 잔존 데이터 오염 및 NameError 방지)
             qr_detected = False
             qr_data = None
@@ -122,13 +124,13 @@ try:
             # 파일에서 읽어온 임의의 출발 위치(디그리) 선택
             start_angle_deg = start_angles[i % len(start_angles)]
             
-            print(f"\n[실험 {i+1}/10] 출발 위치({start_angle_deg}°)로 이동합니다.")
+            print(f"\n[실험 {i+1}/22] 출발 위치({start_angle_deg}°)로 이동합니다.")
             
             # 💡 출발 각도 디그리 -> 라디안 변환 후 짐벌 이동
             gimbal.move_to(math.radians(start_angle_deg))
             
             # 임의의 출발 위치로 간 뒤 1초 대기
-            time.sleep(1.0)
+            time.sleep(3.0)
             
             # 1초 대기 후 가장 최신의 타겟 데이터를 락을 걸고 가져옴
             with data_lock:
@@ -136,7 +138,7 @@ try:
                 
             if current_target is None:
                 print("아직 클라이언트로부터 수신된 데이터가 없습니다. 이번 회차는 건너뜁니다.")
-                time.sleep(1.0) # 데이터가 없어도 실험 주기를 맞추기 위해 1초 대기
+                time.sleep(3.0) # 데이터가 없어도 실험 주기를 맞추기 위해 1초 대기
                 continue
                 
             # 데이터 분해
@@ -234,18 +236,18 @@ try:
             except Exception as e:
                 print(f"Data processing error in iteration {i+1}: {e}")
 
-            # 타겟 위치까지 정렬을 마친 뒤 5초간 대기
-            time.sleep(1.0)
+            # 타겟 위치까지 정렬을 마친 뒤 1초간 대기
+            time.sleep(3.0)
 
         # -----------------------------------------------------------------
-        # 10회 반복이 끝난 후 본 위치인 90도로 정렬
+        # 22회 반복이 끝난 후 본 위치인 90도로 정렬
         # -----------------------------------------------------------------
-        print("\n[실험 종료] 10회 반복을 마쳤습니다. 짐벌을 본 위치(90도)로 복귀합니다.")
+        print("\n[실험 종료] 22회 반복을 마쳤습니다. 짐벌을 본 위치(90도)로 복귀합니다.")
         
         # 💡 복귀 각도 라디안으로 변환 (90.0도)
         gimbal.move_to(math.radians(0.0))
         
-        print("명령을 입력하세요 [엔터: 다음 10회 실험 시작, q: 종료] : ", end="", flush=True)
+        print("명령을 입력하세요 [엔터: 다음 22회 실험 시작, q: 종료] : ", end="", flush=True)
 
 except KeyboardInterrupt:
     print("\n강제 종료됨...")
@@ -254,3 +256,6 @@ finally:
     print("\nShutting down server...")
     gimbal.cleanup()
     sock.close()
+
+    if 'qr_scanner' in locals():
+        qr_scanner.stop()
