@@ -56,8 +56,8 @@ def main():
         df_grouped['align_recog_time_ms'], 
         marker='o', 
         linestyle='-', 
-        linewidth=2, 
-        markersize=6, 
+        linewidth=3, 
+        markersize=8, 
         color='#1f77b4', 
         label='Alignment Time'
     )
@@ -67,21 +67,26 @@ def main():
         overall_avg_time, 
         color='red', 
         linestyle='--', 
-        linewidth=1.5, 
+        linewidth=2, 
         label=f'Average Alignment Time ({overall_avg_time:.2f} ms)'
     )
 
     # Academic-style chart annotations (English only)
-    plt.title('Alignment Time', fontsize=16, fontweight='bold', pad=15)
-    plt.xlabel('Real Target Azimuth (degrees)', fontsize=12, labelpad=10)
-    plt.ylabel('Alignment Time (ms)', fontsize=12, labelpad=10)
-    plt.xlim(df_grouped['real_target_azimuth'].min() - 2, df_grouped['real_target_azimuth'].max() + 2)
+    # plt.title('Alignment Time', fontsize=16, fontweight='bold', pad=15)
+    plt.xlabel('Real Target Azimuth (degrees)', fontsize=24, labelpad=15)
+    plt.ylabel('Alignment Time (ms)', fontsize=24, labelpad=15)
+    
+    # Configure X-axis ticks in steps of 10, from -50 to 50
+    x_ticks = [-50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 50]
+    plt.xticks(ticks=x_ticks, fontsize=20)
+    plt.yticks(fontsize=20)
+    plt.xlim(-55, 55)
     plt.ylim(0, max(df_grouped['align_recog_time_ms'].max() + 100, overall_avg_time + 100))
     
     # Add minor grid lines
     plt.grid(True, which='both', linestyle=':', alpha=0.5)
     
-    plt.legend(loc='best', fontsize=11, frameon=True)
+    plt.legend(loc='best', fontsize=20, frameon=True)
     plt.tight_layout()
 
     # Save to the result directory
