@@ -49,3 +49,6 @@ Thumbs.db
 
 # External/reference code not included in this repository
 lc29h_gps_rtk_hat_code/
+
+# Windows Virtual Environment folders
+Scripts/
