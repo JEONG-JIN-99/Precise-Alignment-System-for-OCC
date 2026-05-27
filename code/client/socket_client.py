@@ -9,7 +9,7 @@ from uwb.sensor import UWB
 
 # 짐벌 파이의 IP 주소
 # cier
-GIMBAL_IP = "192.168.0.32" 
+GIMBAL_IP = "192.168.0.31" 
 # hotspot
 
 # GIMBAL_IP = "10.185.103.85" 
